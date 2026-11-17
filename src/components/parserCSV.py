@@ -3,60 +3,42 @@ def readFile(path):
         return file.read()
 
 
-def createSchema(csv):
-    curArr = []
-    listArr = []
-    curWord = ""
+def createSchema(csv, arrayGlobal, arrayCur, index, part):
+    if index == len(csv):
+        arrayCur.append(part)
+        arrayGlobal.append(arrayCur)
+        return arrayGlobal
 
-    for ch in csv:
-        if ch == "|":
-            curArr.append(curWord)
-            curWord = ""
-        elif ch == "\n":
-            if curWord:
-                curArr.append(curWord)
-                curWord = ""
-            listArr.append(curArr)
-            curArr = []
-        else:
-            curWord += ch
-
-    if curWord or curArr:
-        if curWord:
-            curArr.append(curWord)
-        if curArr:
-            listArr.append(curArr)
-
-    return listArr
+    if csv[index] == "|":
+        arrayCur.append(part)
+        return createSchema(csv, arrayGlobal, arrayCur, index + 1, "")
+    elif csv[index] == "\n":
+        arrayCur.append(part)
+        arrayGlobal.append(arrayCur)
+        return createSchema(csv, arrayGlobal, [], index + 1, "")
+    else:
+        part += csv[index]
+        return createSchema(csv, arrayGlobal, arrayCur, index + 1, part)
 
 
-def substrFilter(books, prefix):
-    result = []
-    for book in range(1, len(books)):
-        prefixIndex = 0
-        isWord = False
-        for ch in books[book][1]:
-            if ch == prefix[prefixIndex]:
-                if prefixIndex == len(prefix) - 1:
-                    isWord = True
-                    break
-                prefixIndex += 1
-            else:
-                prefixIndex = 0
+def substrFilter(books, curBookIndex, curWordIndex, curCharIndex, word, prefix):
+    if curBookIndex == len(books) - 1: 
+        return []
+    if books[curBookIndex][-1] == books[curBookIndex][curWordIndex]:
+        return substrFilter(books, curBookIndex + 1, 0, 0, "", prefix)
+    if books[curBookIndex][curWordIndex][-1] == books[curBookIndex][curWordIndex][curCharIndex]:
+        return substrFilter(books, curBookIndex, curWordIndex + 1, 0, "", prefix)
+    if word == prefix:
+        return books[curBookIndex]
 
-        if isWord is True:
-            newArr = [ 
-                books[book][0], 
-                books[book][1] + ", " + books[book][2],
-                books[book][3],
-                books[book][4]
-            ]
-            result.append(newArr)
-    return result
+    word += books[curBookIndex][curWordIndex][curCharIndex]
+
+    return substrFilter(books, curBookIndex, curWordIndex, curCharIndex + 1, word, prefix)    
 
 
-def booksCounter(books):
-    result = []
-    for book in range(len(books)):
-        result.append((books[book][0], int(books[book][3]) * float(books[book][4])))
-    return result
+def booksCounter(books, curBook, array):
+    if curBook == len(books) - 1:
+        return array
+    
+    array.append((books[curBook][0], float(books[curBook][-1]) * int(books[curBook][-2])))
+    return booksCounter(books, curBook + 1, array)
